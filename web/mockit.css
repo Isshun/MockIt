@@ -1,0 +1,57 @@
+
+body {
+  background-color: #F8F8F8;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  font-weight: normal;
+  line-height: 1.2em;
+  margin: 15px;
+  overflow: hidden;
+}
+
+h1, p {
+  color: #333;
+}
+
+#toolbox {
+  position: absolute;
+  top: 0;
+  left: -1500px;
+  width: 410px;
+  height: 100%;
+  background: #eee;
+  border-right: 2px solid #ddd;
+  z-index: 1000;
+  background: url('res/toolbox.png');
+}
+  
+#user {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 150px;
+  height: 100%;
+  background: #eee;
+  border-left: 2px solid #ddd; 
+}
+
+#workspace {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border: 1px solid #ccc;
+  background-color: #fff;
+}
+
+#workspace .page {
+  background: red;
+  position: absolute;
+  width: 80px;
+  height: 100px;
+}
+
+#sample_text_id {
+  font-size: 24pt;
+  text-align: center;
+  margin-top: 140px;
+}
