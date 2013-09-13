@@ -1,7 +1,0 @@
-name: MockIt
-description: MockIt
-dependencies:
-  browser: any
-  polymer: any
-  uuid: any
-  json_object: any
