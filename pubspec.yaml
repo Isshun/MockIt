@@ -4,4 +4,5 @@ dependencies:
   browser: any
   polymer: any
   uuid: any
+  math: any
   json_object: any

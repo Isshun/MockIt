@@ -1,6 +1,7 @@
 import 'dart:html';
 import 'dart:collection';
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:json_object/json_object.dart';
 import '../model.dart';
 import '../models/page.dart';
@@ -11,16 +12,14 @@ import '../models/workspace.dart';
 import '../models/workspaces.dart';
 
 class Workspace {
-  
+    
   PageView    _page;
   String      _selectedPageId;
     
   Model       _ws;
   UserModel   _user;
   PagesModel  _pages;
-  
-  
-  
+
   Workspace(ws, user) {
       
     _ws = ws;
@@ -45,7 +44,6 @@ class Workspace {
     mouseDownListener.onData((MouseEvent event) {
       if (_page != null) return true;
       
-      DateTime start = new DateTime.now();
       int initialXOffset = target.offsetLeft - event.pageX;
       int initialYOffset = target.offsetTop - event.pageY;
       
@@ -58,13 +56,12 @@ class Workspace {
       
       var mouseUpListener = document.onMouseUp.listen(null);
       mouseUpListener.onData((MouseEvent e2) {
-        DateTime now = new DateTime.now();
-        if (now.millisecondsSinceEpoch < start.millisecondsSinceEpoch + 100) {
+        int distance = abs(event.pageX - e2.pageX) + abs(event.pageY - e2.pageY);
+        if (distance < 10) {
           onSelected(e2);
         } else {
           onMove(e2, e2.pageX + initialXOffset, e2.pageY + initialYOffset);
         }
-  //      mouseDownListener.cancel();
         mouseUpListener.cancel();
         mouseMoveListener.cancel();
       });
@@ -201,6 +198,10 @@ class Workspace {
     _ws.send(jsonData);
     
     print("onDragEnd: " + event.target.id.toString() + " " + x.toString() + " " + y.toString());
+  }
+  
+  int abs(int i) {
+    return i < 0 ? i * -1 : 1;
   }
 }
 

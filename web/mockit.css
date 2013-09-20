@@ -22,7 +22,7 @@ h1, p {
   background: #eee;
   border-right: 2px solid #ddd;
   z-index: 1000;
-  background: url('res/toolbox.png');
+  /*background: url('res/toolbox.png');*/
 }
   
 #user {
