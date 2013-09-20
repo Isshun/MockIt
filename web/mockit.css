@@ -24,7 +24,12 @@ h1, p {
   z-index: 1000;
   /*background: url('res/toolbox.png');*/
 }
-  
+
+#toolbox img {
+  max-width: 410px;
+  position: absolute;
+}
+
 #user {
   position: absolute;
   top: 0;

@@ -21,17 +21,49 @@ class Workspace {
   PagesModel  _pages;
 
   Workspace(ws, user) {
-      
+    
     _ws = ws;
     _ws.setOnUpdateListener(onUpdate);
 
     _user = user;
     
     _pages = new PagesModel();
+        
+//    
+//    document.onMouseWheel.listen((MouseEvent event) {
+//      // Wheel up
+//      if (event.wheelDeltaY > 0) {
+//        if (_page == null && _selectedPageId != null) {
+//          onPageOpened();
+//        }
+//      }
+//      // Wheel down
+//      else {
+//        if (_page != null && _selectedPageId != null && _selectedPageId == _page.id) {
+//          onPageClosed();
+//        }
+//      }
+//    });
     
-    var body = query('body');
-    body.onMouseWheel.listen(onEnterPage);
-    body.onMouseWheel.listen(onExitPage);
+    document.onKeyUp.listen((KeyboardEvent event) {
+      if (event.keyCode == 32) {
+        if (_page == null && _selectedPageId != null) {
+          onPageOpened();
+        }
+      }
+    });
+  }
+  
+  void onPageOpened() {
+    print('onCreate page');
+    _page = _pages.getView(_selectedPageId);
+    _page.onCreate(this);
+  }
+  
+  void onPageClosed() {
+    print('onPageClosed');
+    _page.onDestroy(this);
+    _page = null;
   }
   
   outputMsg(String msg) {
@@ -121,59 +153,6 @@ class Workspace {
     }
   }
   
-  void onEnterPage(event) {
-    if (event.wheelDeltaY < 0) return;
-            
-    if (_page == null && _selectedPageId != null) {
-      print('onEnterPage');
-
-      _page = _pages.getView(_selectedPageId);
-      
-      DivElement d = query('#' + _selectedPageId);
-      d.style.top = '100px';
-      d.style.left = '450px';
-      d.style.width = '300px';
-      d.style.height = '450px';
-      d.style.zIndex = '10';
-      d.style.transition = 'all 0.4s ease-out';
-      
-      // Open toolbox
-      DivElement toolbox = query("#toolbox");
-      toolbox.style.left = '0';
-      toolbox.style.transition = 'all 0.8s ease-out';
-    } 
-  }
-  
-  void onExitPage(event) {
-    if (event.wheelDeltaY > 0) return;
-        
-    if (_page != null && _selectedPageId != null && _selectedPageId == _page.id) {
-      print('onExitPage');
-
-      _page = null;
-  
-      PageModel page = null;
-      for (PageModel p in _pages.list) {
-        if (p.id == _selectedPageId) {
-          page = p;
-          break;
-        }
-      }
-  
-      DivElement d = query('#' + _selectedPageId);
-      d.style.top = page.y.toString() + 'px';
-      d.style.left = page.x.toString() + 'px';
-      d.style.width = '80px';
-      d.style.height = '100px';
-      d.style.zIndex = '0';
-      d.style.transition = 'all 0.4s ease-in';
-      
-      // Close toolbox
-      DivElement toolbox = query("#toolbox");
-      toolbox.style.left = '-1500px';
-      toolbox.style.transition = 'all 0.8s ease-in';
-    }
-  }
   
   void onSelected(MouseEvent event) {
     Element elem = query("#" + event.target.id);
@@ -201,7 +180,7 @@ class Workspace {
   }
   
   int abs(int i) {
-    return i < 0 ? i * -1 : 1;
+    return i < 0 ? i * -1 : i * 1;
   }
 }
 
