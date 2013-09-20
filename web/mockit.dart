@@ -1,4 +1,5 @@
 import 'dart:html';
+import 'dart:collection';
 import 'dart:async';
 import 'dart:json';
 import 'package:json_object/json_object.dart';
@@ -13,6 +14,9 @@ String user;
 
 String currentPage;
 String selectedPage;
+
+HashMap<String, Object> listeners = new HashMap<String, Object>();
+
 
 List<PageModel> pages = new List<PageModel>();
 
@@ -87,16 +91,50 @@ void initWebSocket(String url, [int retrySeconds = 2]) {
   });
 }
 
+void makeMovable(HtmlElement target, HtmlElement handle) {
+
+  var mouseDownListener = handle.onMouseDown.listen(null);
+  mouseDownListener.onData((MouseEvent event) {
+    DateTime start = new DateTime.now();
+    int initialXOffset = target.offsetLeft - event.pageX;
+    int initialYOffset = target.offsetTop - event.pageY;
+    
+    target.style.transition = 'none';
+
+    var mouseMoveListener = document.onMouseMove.listen((MouseEvent e1) {
+      target.style.left = (e1.pageX + initialXOffset).toString() + 'px';
+      target.style.top = (e1.pageY + initialYOffset).toString() + 'px';
+    });
+    
+    var mouseUpListener = document.onMouseUp.listen(null);
+    mouseUpListener.onData((MouseEvent e2) {
+      DateTime now = new DateTime.now();
+      if (now.millisecondsSinceEpoch < start.millisecondsSinceEpoch + 100) {
+        onSelected(e2);
+      } else {
+        onMove(e2, e2.pageX + initialXOffset, e2.pageY + initialYOffset);
+      }
+//      mouseDownListener.cancel();
+      mouseUpListener.cancel();
+      mouseMoveListener.cancel();
+    });
+
+    event.preventDefault();
+    
+    return false;
+  });
+}
+
 void updateModel(objects) {
   
   pages.clear();
   
-  for (var obj in objects) {
+  for (JsonObject obj in objects) {
     String type = obj["type"].toString();
 
     outputMsg('model ' + type);
 
-    switch(obj.type) {
+    switch(obj["type"]) {
       case "workspace":
         WorkspaceModel w = WorkspaceModel.fromJsonObj(obj);
         print("get workspace: " + w.name);
@@ -113,19 +151,31 @@ void updateModel(objects) {
           d = new DivElement();
           Element workspace = query("#workspace");
           workspace.append(d);
+          d.style.position = "absolute";
+          d.className = "page";
+          makeMovable(d, d);
         }
 
-        d.text = p.name;
-        d.style.top = p.y.toString() + "px";
-        d.style.left = p.x.toString() + "px";
-        d.style.position = "absolute";
+        bool selected = obj["selected"] != null && obj["selected"];
+
+        if (obj["name"] != null)
+          d.text = obj["name"];        
+        if (obj["offsetTop"] != null)
+          d.style.top = obj["offsetTop"].toString() + "px";
+        if (obj["offsetLeft"] != null)
+          d.style.left = obj["offsetLeft"].toString() + "px";
+        if (obj["id"] != null)
+          d.id = obj["id"];
+        
         d.style.transition = 'none';
-        d.className = "page";
         d.style.border = p.selected ? "2px solid " + color : "none";
-        d.id = p.id;
-        d.onClick.listen(onSelected);
-        d.draggable = true;
-        d.onDragEnd.listen(onDragEnd);
+        
+//        d.onClick.
+//        forEach((action) {
+//          print(action);
+//        });
+        //d.draggable = true;
+        //d.onDragEnd.listen(onDragEnd);        
 
         break;
     }
@@ -231,15 +281,6 @@ void onExitPage(event) {
 
 }
 
-void onDragEnd(event) {
-  print(event);
-  
-  var jsonData = '{"cmd": "updateWorkspace", "id": "' + event.target.id + '", "data": {"offsetTop": ' + event.clientY.toString() + ', "offsetLeft": ' + event.clientX.toString() + '}}';
-  ws.send(jsonData);
-  
-  print("onDragEnd: " + event.target.id.toString() + " " + event.clientX.toString() + " " + event.clientY.toString());
-}
-
 void socketMessage() {
  print('message');
 }
@@ -264,4 +305,13 @@ void onSelected(MouseEvent event) {
 
   }
 
+}
+
+void onMove(MouseEvent event, int x, int y) {
+  print(event);
+  
+  var jsonData = '{"cmd": "updateWorkspace", "id": "' + event.target.id + '", "data": {"offsetTop": ' + y.toString() + ', "offsetLeft": ' + x.toString() + '}}';
+  ws.send(jsonData);
+  
+  print("onDragEnd: " + event.target.id.toString() + " " + x.toString() + " " + y.toString());
 }
