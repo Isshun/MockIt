@@ -82,7 +82,6 @@ class PageView {
     _toolbox = query("#toolbox");
     _toolbox.style.left = '0';
     _toolbox.style.transition = 'all 0.8s ease-out';
-    int z = 1;
     _toolbox.children.forEach((HtmlElement item) {
       
       // Generate uuid
@@ -97,6 +96,7 @@ class PageView {
       makeMovable(item, item);
 
       // Index
+      int z = 1;
       item.style.zIndex = (z++).toString();
       item.onMouseWheel.listen((MouseEvent event) {
         if (_modifier_alt) {
@@ -132,6 +132,19 @@ class PageView {
   
     var mouseDownListener = handle.onMouseDown.listen(null);
     mouseDownListener.onData((MouseEvent event) {
+      
+      DivElement clone = new DivElement();
+      clone.style.width = '100px';
+      clone.style.height = '100px';
+      clone.style.background = 'blue';
+      clone.style.position = 'absolute';
+      clone.style.left = target.style.left;
+      clone.style.top = target.style.top;
+      clone.style.zIndex = target.style.zIndex;
+      
+      HtmlElement page = query('#page');
+      page.append(clone);
+      target = clone;
       
       _modifier_resize = false;
 
