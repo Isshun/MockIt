@@ -3,7 +3,7 @@ library model;
 import 'package:json_object/json_object.dart';
 
 class PageModel extends JsonObject {
-    
+  
   String _name;
   String get name => _name;
   void set name(String value) { _name = value; }
@@ -33,5 +33,5 @@ class PageModel extends JsonObject {
     m.selected = json["selected"] != null && json["selected"];
     return m;
   }
-  
+
 }

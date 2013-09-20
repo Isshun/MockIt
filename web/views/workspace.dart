@@ -4,19 +4,21 @@ import 'dart:async';
 import 'package:json_object/json_object.dart';
 import '../model.dart';
 import '../models/page.dart';
+import '../views/page.dart';
 import '../models/user.dart';
+import '../models/pages.dart';
 import '../models/workspace.dart';
 import '../models/workspaces.dart';
 
 class Workspace {
   
-  String _currentPage;
-  String _selectedPage;
+  PageView    _page;
+  String      _selectedPageId;
     
-  Model     _ws;
-  UserModel _user;
+  Model       _ws;
+  UserModel   _user;
+  PagesModel  _pages;
   
-  List<PageModel> pages = new List<PageModel>();
   
   
   Workspace(ws, user) {
@@ -25,6 +27,8 @@ class Workspace {
     _ws.setOnUpdateListener(onUpdate);
 
     _user = user;
+    
+    _pages = new PagesModel();
     
     var body = query('body');
     body.onMouseWheel.listen(onEnterPage);
@@ -39,7 +43,7 @@ class Workspace {
   
     var mouseDownListener = handle.onMouseDown.listen(null);
     mouseDownListener.onData((MouseEvent event) {
-      if (_currentPage != null) return true;
+      if (_page != null) return true;
       
       DateTime start = new DateTime.now();
       int initialXOffset = target.offsetLeft - event.pageX;
@@ -73,7 +77,7 @@ class Workspace {
   
   void onUpdate(objects) {
     
-    pages.clear();
+    _pages.clear();
     
     for (JsonObject obj in objects) {
       String type = obj["type"].toString();
@@ -86,8 +90,7 @@ class Workspace {
           print("get workspace: " + w.name);
           break;
         case "page":
-          PageModel p = PageModel.fromJsonObj(obj);
-          pages.add(p);
+          PageModel p = _pages.addfromJsonObj(obj);
           print("get page: " + p.name);
           
           DivElement d = query("#" + p.id);
@@ -121,26 +124,15 @@ class Workspace {
     }
   }
   
-  
   void onEnterPage(event) {
     if (event.wheelDeltaY < 0) return;
-    
-    print('onEnterPage');
-    
-    String id = _selectedPage;
-    
-    if (id != _currentPage) {
-      _currentPage = id;
-  
-      PageModel page = null;
-      for (PageModel p in pages) {
-        if (p.id == id) {
-          page = p;
-          break;
-        }
-      }
+            
+    if (_page == null && _selectedPageId != null) {
+      print('onEnterPage');
+
+      _page = _pages.getView(_selectedPageId);
       
-      DivElement d = query('#' + id);
+      DivElement d = query('#' + _selectedPageId);
       d.style.top = '100px';
       d.style.left = '450px';
       d.style.width = '300px';
@@ -157,23 +149,21 @@ class Workspace {
   
   void onExitPage(event) {
     if (event.wheelDeltaY > 0) return;
-  
-    print('onExitPage');
-  
-    String id = _selectedPage;
-    
-    if (id != null && id == _currentPage) {
-      _currentPage = null;
+        
+    if (_page != null && _selectedPageId != null && _selectedPageId == _page.id) {
+      print('onExitPage');
+
+      _page = null;
   
       PageModel page = null;
-      for (PageModel p in pages) {
-        if (p.id == id) {
+      for (PageModel p in _pages.list) {
+        if (p.id == _selectedPageId) {
           page = p;
           break;
         }
       }
   
-      DivElement d = query('#' + id);
+      DivElement d = query('#' + _selectedPageId);
       d.style.top = page.y.toString() + 'px';
       d.style.left = page.x.toString() + 'px';
       d.style.width = '80px';
@@ -192,9 +182,9 @@ class Workspace {
     Element elem = query("#" + event.target.id);
     String id = event.target.id;
     
-    for (PageModel p in pages) {
+    for (PageModel p in _pages.list) {
       if (p.id == id) {
-        _selectedPage = p.selected ? null : p.id;
+        _selectedPageId = p.selected ? null : p.id;
         var jsonData = '{"cmd": "updateWorkspace", "id": "' + p.id + '", "data": {"selected": ' + (!p.selected).toString() + '}}';
         _ws.send(jsonData);
       } else if (p.selected) {
